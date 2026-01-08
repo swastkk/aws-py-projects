@@ -1,0 +1,15 @@
+# Book Library CRUD API
+
+### Dir structure
+```dir
+  book-library-backend
+    │   .env
+    │   db.json
+    │   deleteBook.py
+    │   getBook.py
+    │   getBooks.py
+    │   patchBook.py
+    │   postBooks.py
+    │   putBookImage.py
+    │   README
+```
