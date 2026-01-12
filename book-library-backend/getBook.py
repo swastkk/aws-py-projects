@@ -28,5 +28,5 @@ def lambda_handler(event, context):
         response_data = convert_decimal(response_item)
 
     except Exception as e:
-        return {"statusCode": 500, "message": f"Error: {e}"}
+        return {"statusCode": 500, "body": json.dumps({"message": e})}
     return {"statusCode": 200, "body": json.dumps(response_data)}

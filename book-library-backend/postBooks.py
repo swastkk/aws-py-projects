@@ -1,3 +1,4 @@
+import json
 from uuid import uuid4 as uuid
 
 import boto3
@@ -20,9 +21,12 @@ def lambda_handler(event, context):
 
     except ClientError as e:
         if e.response["Error"]["Code"] == "ResourceNotFoundException":
-            return {"statusCode": 401, "message": f"Table is not there! sorry!"}
+            return {
+                "statusCode": 404,
+                "body": json.dumps({"message": "Table is not there! sorry!"}),
+            }
         else:
-            return {"statusCode": 500, "message": f"error details: {e}"}
+            return {"statusCode": 500, "body": json.dumps({"message": e})}
 
     event = {**event, "id": book_id}
     return {

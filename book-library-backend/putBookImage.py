@@ -8,9 +8,6 @@ import boto3
 from botocore.exceptions import ClientError
 from decimal import Decimal
 from boto3.dynamodb.conditions import Key
-from dotenv import load_dotenv
-
-load_dotenv()
 
 
 def convert_decimal(obj):
@@ -68,8 +65,8 @@ def lambda_handler(event, context):
         response_data = {**response_data, "image": image_key}
 
     except ClientError as client_error:
-        return {"statusCode": 400, "message": f"Authorization error: {client_error}"}
+        return {"statusCode": 503, "body": json.dumps({"message": f"Service Unavailable: Error Details: {client_error}"})}
     except Exception as e:
-        return {"statusCode": 500, "message": f"Error: {e}"}
+        return {"statusCode": 500, "body": json.dumps({"message": e})}
 
     return {"statusCode": 200, "body": json.dumps(response_data)}

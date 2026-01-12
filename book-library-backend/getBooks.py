@@ -22,9 +22,8 @@ def generate_presigned_url(s3, bucket_name, key):
 
 
 def lambda_handler(event, context):
-    db = boto3.resource("dynamodb")
-
     try:
+        db = boto3.resource("dynamodb")
         table = db.Table("books")
         table.load()
 
@@ -46,18 +45,21 @@ def lambda_handler(event, context):
         else:
             return {
                 "statusCode": 500,
-                "body": json.dumps(e.response),
+                "body": json.dumps({"message": e.response}),
             }
 
     response = table.scan()
     book_data = response.get("Items", [])
 
     bucket_name = os.getenv("BUCKET_NAME")
-    s3_client = boto3.client("s3")
-    for book in book_data:
-        book["image_url"] = generate_presigned_url(
-            s3_client, bucket_name, book.get("image", "")
-        )
+    try:
+        s3_client = boto3.client("s3")
+        for book in book_data:
+            book["image_url"] = generate_presigned_url(
+                s3_client, bucket_name, book.get("image", "")
+            )
+    except ClientError as e:
+        return {"statusCode": 500, "body": json.dumps({"message": e.response})}
     return {
         "statusCode": 200,
         "body": book_data,

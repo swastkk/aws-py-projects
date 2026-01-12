@@ -9,9 +9,6 @@ from decimal import Decimal
 
 import boto3
 from boto3.dynamodb.conditions import Key
-from dotenv import load_dotenv
-
-load_dotenv()
 
 
 def convert_decimal(obj):
@@ -85,8 +82,7 @@ def lambda_handler(event, context):
         }
 
     except Exception as e:
-        print(e)
-        return {"statusCode": 500, "message": f"Error: {e}"}
+        return {"statusCode": 500, "body": json.dumps({"message": e})}
 
     return {
         "statusCode": 200,

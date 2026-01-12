@@ -7,12 +7,7 @@ from boto3.dynamodb.conditions import Key
 def lambda_handler(event, context):
     book_id = str(event["pathParameters"]["id"])
     try:
-        db = boto3.resource(
-            "dynamodb",
-            region_name="ap-south-1",
-            aws_access_key_id="AKIAU27BNQN2UNBKJQJW",
-            aws_secret_access_key="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",
-        )
+        db = boto3.resource("dynamodb")
 
         table = db.Table("books")
         response = table.query(KeyConditionExpression=Key("id").eq(book_id))
@@ -23,7 +18,7 @@ def lambda_handler(event, context):
         )
 
     except Exception as e:
-        return {"statusCode": 500, "message": f"Error: {e}"}
+        return {"statusCode": 500, "body": json.dumps({"message": e})}
     return {
         "statusCode": 200,
         "body": json.dumps({"message": f"Book with id {book_id} deleted succesfully!"}),
