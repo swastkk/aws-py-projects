@@ -4,10 +4,12 @@
 
 import json
 import os
-import boto3
-from botocore.exceptions import ClientError
+import traceback
 from decimal import Decimal
+
+import boto3
 from boto3.dynamodb.conditions import Key
+from botocore.exceptions import ClientError
 
 
 def convert_decimal(obj):
@@ -65,8 +67,16 @@ def lambda_handler(event, context):
         response_data = {**response_data, "image": image_key}
 
     except ClientError as client_error:
-        return {"statusCode": 503, "body": json.dumps({"message": f"Service Unavailable: Error Details: {client_error}"})}
+        return {
+            "statusCode": 503,
+            "body": json.dumps(
+                {"message": f"Service Unavailable: Error Details: {client_error}"}
+            ),
+        }
     except Exception as e:
-        return {"statusCode": 500, "body": json.dumps({"message": e})}
+        return {
+            "statusCode": 500,
+            "body": json.dumps({"message": str(e), "trace": traceback.format_exc()}),
+        }
 
     return {"statusCode": 200, "body": json.dumps(response_data)}

@@ -5,6 +5,7 @@
 import base64
 import json
 import os
+import traceback
 from decimal import Decimal
 
 import boto3
@@ -82,7 +83,10 @@ def lambda_handler(event, context):
         }
 
     except Exception as e:
-        return {"statusCode": 500, "body": json.dumps({"message": e})}
+        return {
+            "statusCode": 500,
+            "body": json.dumps({"message": str(e), "trace": traceback.format_exc()}),
+        }
 
     return {
         "statusCode": 200,

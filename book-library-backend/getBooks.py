@@ -47,6 +47,8 @@ def lambda_handler(event, context):
                 "statusCode": 500,
                 "body": json.dumps({"message": e.response}),
             }
+    except Exception as e:
+        return {"statusCode": 500, "body": json.dumps({"message": str(e)})}
 
     response = table.scan()
     book_data = response.get("Items", [])
@@ -59,8 +61,13 @@ def lambda_handler(event, context):
                 s3_client, bucket_name, book.get("image", "")
             )
     except ClientError as e:
-        return {"statusCode": 500, "body": json.dumps({"message": e.response})}
+        return {"statusCode": 403, "body": json.dumps({"message": e.response})}
+
     return {
         "statusCode": 200,
         "body": book_data,
     }
+
+
+if __name__ == "__main__":
+    print(lambda_handler({}, {}))

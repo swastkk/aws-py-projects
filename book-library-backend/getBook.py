@@ -2,6 +2,7 @@
 # For the sake of event to parse without any obsctruction
 
 import json
+import traceback
 from decimal import Decimal
 
 import boto3
@@ -27,6 +28,14 @@ def lambda_handler(event, context):
         response_item = response.get("Items")[0]
         response_data = convert_decimal(response_item)
 
+    except IndexError:
+        return {
+            "statusCode": 404,
+            "body": json.dumps({"message": f"Book with id {book_id} not found!"}),
+        }
     except Exception as e:
-        return {"statusCode": 500, "body": json.dumps({"message": e})}
+        return {
+            "statusCode": 500,
+            "body": json.dumps({"message": str(e), "trace": traceback.format_exc()}),
+        }
     return {"statusCode": 200, "body": json.dumps(response_data)}

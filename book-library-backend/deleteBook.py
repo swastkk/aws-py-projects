@@ -1,4 +1,5 @@
 import json
+import traceback
 
 import boto3
 from boto3.dynamodb.conditions import Key
@@ -17,8 +18,16 @@ def lambda_handler(event, context):
             Key={"id": obj_to_delete["id"], "name": obj_to_delete["name"]}
         )
 
+    except IndexError:
+        return {
+            "statusCode": 404,
+            "body": json.dumps({"message": f"Book with id {book_id} not found!"}),
+        }
     except Exception as e:
-        return {"statusCode": 500, "body": json.dumps({"message": e})}
+        return {
+            "statusCode": 500,
+            "body": json.dumps({"message": str(e), "trace": traceback.format_exc()}),
+        }
     return {
         "statusCode": 200,
         "body": json.dumps({"message": f"Book with id {book_id} deleted succesfully!"}),
