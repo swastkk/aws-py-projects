@@ -48,7 +48,6 @@ def lambda_handler(event, context):
         table = db.Table("books")
         response = table.query(KeyConditionExpression=Key("id").eq(book_id))
         response_item = response.get("Items")[0]
-
         # Assign a presign url for the Image upload purpose.
         s3_client = boto3.client("s3")
 
@@ -60,7 +59,7 @@ def lambda_handler(event, context):
 
         # save the key against the image key of the book object
         table.update_item(
-            Key={"id": response_item["id"], "name": response_item["name"]},
+            Key={"id": response_item["id"]},
             AttributeUpdates={"image": {"Value": f"{image_key}", "Action": "PUT"}},
         )
         response_data = convert_decimal(response_item)
