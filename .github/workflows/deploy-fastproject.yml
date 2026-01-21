@@ -1,44 +1,67 @@
-name: Deploy FastAPI Application image to Docker Hub
+name: Deploy FastAPI Application to Docker Hub
 
 on:
   push:
     branches:
       - master
+    paths:
+      - 'fastproject/**'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'fastproject/**'
 
 jobs:
-  build:
+  test-and-deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./fastproject
+    
     steps:
-      - name: Checkout code with checkout action
-        uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v4
       
-      - name: Set up Python with setup-python action
-        uses: actions/setup-python@v6
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       
-      - name: Install the dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install fastapi[standard] uvicorn docker
-  
-  deploy: 
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+          pip install fastapi[standard] uvicorn
+      
+      - name: Set up Docker Buildx
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: docker/setup-buildx-action@v3
       
       - name: Login to Docker Hub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       
-      - name: Build with command 
-        run: |
-          docker build -t swastiksharma/fastproject:latest fastproject/.
+      - name: Extract metadata
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: swastiksharma/fastproject
+          tags: |
+            type=sha,prefix=master-
+            type=raw,value=latest
       
-      - name: Push to Docker Hub
-        run: |
-          docker push swastiksharma/fastproject:latest
+      - name: Build and push Docker image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./fastproject
+          file: ./fastproject/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=swastiksharma/fastproject:buildcache
+          cache-to: type=registry,ref=swastiksharma/fastproject:buildcache,mode=max
