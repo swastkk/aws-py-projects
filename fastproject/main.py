@@ -15,3 +15,7 @@ def read_root():
 @app.get(f"/{version}/greet")
 def greet():
     return {"message": "Hello from the greet endpoint!"}
+
+@app.get(f"/{version}/hello")
+def get_version():
+    return {"message": "Hellooooooooooooooooooooooooooo"}
