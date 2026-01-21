@@ -37,7 +37,7 @@ jobs:
       
       - name: Build with command 
         run: |
-          docker build -t swastiksharma/fastproject:latest .
+          docker build -t swastiksharma/fastproject:latest fastproject\.
       
       - name: Push to Docker Hub
         run: |
