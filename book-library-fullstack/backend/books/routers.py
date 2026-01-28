@@ -10,19 +10,32 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 import books.utils as utils
-from books.models import BookGET, BookOut
+from books.models import BookOut
 from books.schema import BookCreate
 from db import get_db
 
 load_dotenv()
 
+s3_client = boto3.client("s3", region_name="ap-south-1", aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"), aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"))
+s3_bucket = os.getenv("BUCKET_NAME")
 
 book_router = APIRouter(prefix="/books", tags=["Books"])
 
 
-@book_router.get("/", response_model=List[BookOut])
+@book_router.get("/")
 def get_books(db: Session = Depends(get_db)):
-    return db.execute(text("SELECT * FROM books")).fetchall()
+    global s3_client
+    global s3_bucket
+
+    books = db.execute(text("SELECT * FROM books")).mappings().all()
+    response_data = []
+    for book in books:
+        image_url = utils.generate_get_presigned_url(s3_client, s3_bucket, book["image"])
+        book_dict = dict(book)
+        book_dict["image_url"] = image_url
+        response_data.append(book_dict)
+    return response_data
+
 
 
 @book_router.post("/add", response_model=BookOut)
@@ -53,22 +66,18 @@ def post_book(payload: BookCreate, db: Session = Depends(get_db)):
 
 @book_router.get("/{book_id}")
 def get_book_by_id(book_id: uuid.UUID, db: Session = Depends(get_db)):
+    global s3_client
+    global s3_bucket
+
     book = dict(
         db.execute(text("SELECT * FROM books WHERE id = :id"), {"id": book_id})
         .mappings()
         .fetchone()
     )
-    print(book["image"])
-    s3_client = boto3.client(
-        "s3",
-        region_name="ap-south-1",
-        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-    )
+
     book["image_url"] = utils.generate_get_presigned_url(
-        s3_client, os.getenv("BUCKET_NAME"), book["image"]
+        s3_client, s3_bucket, book["image"]
     )
-    print(book)
     if not book:
         return JSONResponse(status_code=404, content={"detail": "Book not found"})
     return book
@@ -134,6 +143,9 @@ def update_book(book_id: uuid.UUID, payload: BookCreate, db: Session = Depends(g
 
 @book_router.get("/{book_id}/upload")
 def upload_book_image(book_id: uuid.UUID, db: Session = Depends(get_db)):
+    global s3_client
+    global s3_bucket
+
     book = (
         db.execute(text("SELECT * FROM books WHERE id = :id"), {"id": book_id})
         .mappings()
@@ -142,16 +154,10 @@ def upload_book_image(book_id: uuid.UUID, db: Session = Depends(get_db)):
     if not book:
         return JSONResponse(status_code=404, content={"detail": "Book not found"})
     try:
-        boto3_client = boto3.client(
-            "s3",
-            region_name="ap-south-1",
-            aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-            aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-        )
-        bucket_name = os.getenv("BUCKET_NAME")
+        bucket_name = s3_bucket
         image_key = utils.generate_image_key(book["name"])
         upload_image_url = utils.generate_put_presigned_url(
-            boto3_client, bucket_name, image_key
+            s3_client, bucket_name, image_key
         )
         response_book_data = dict(book)
         response_book_data["upload_image_url"] = upload_image_url
