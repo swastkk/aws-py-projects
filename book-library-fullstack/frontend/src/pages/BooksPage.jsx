@@ -102,7 +102,7 @@ export default function BooksPage() {
 
   return (
     <div style={styles.page}>
-      <h1 style={{ marginTop: 0 }}>📚 Book Management</h1>
+      <h1 style={{ marginTop: 0 }}>Book Library (Sw.)</h1>
 
       <div style={styles.grid}>
         <BookForm
@@ -126,7 +126,7 @@ export default function BooksPage() {
 
 const styles = {
   page: {
-    maxWidth: 1100,
+    // maxWidth: 1100,
     margin: "0 auto",
     padding: 18,
     fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Arial",

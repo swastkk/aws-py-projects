@@ -66,13 +66,15 @@ export default function BookForm({ onSubmit, loading, selected, onCancel }) {
         onChange={handleChange}
         required
       />
-
-      <input
-        style={styles.input}
-        type="file"
-        accept="image/*"
-        onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-      />
+      
+      {!selected && (
+        <input
+          style={styles.input}
+          type="file"
+          accept="image/*"
+          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+        />
+      )}
 
       <div style={styles.row}>
         <button disabled={loading} style={styles.primary} type="submit">
@@ -98,7 +100,7 @@ const styles = {
   },
   row: { display: "flex", gap: 10, marginTop: 12 },
   input: {
-    width: "100%",
+    width: "95%",
     padding: "10px 12px",
     borderRadius: 10,
     border: "1px solid #ddd",
