@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS books (
+    id UUID PRIMARY KEY,
+    name TEXT NOT NULL,
+    author TEXT NOT NULL,
+    price DOUBLE PRECISION NOT NULL,
+    image TEXT
+);
